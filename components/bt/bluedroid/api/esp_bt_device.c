@@ -12,17 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __BTC_MANAGE_H__
-#define __BTC_MANAGE_H__
 
-#include "bta_api.h"
-#include "btc_task.h"
-#include "esp_bt_defs.h"
+#include "esp_bt_device.h"
+#include "esp_bt_main.h"
+#include "controller.h"
 
-/* reset gatt callback table */
-void esp_profile_cb_reset(void);
-
-int btc_profile_cb_set(btc_pid_t profile_id, void *cb);
-void *btc_profile_cb_get(btc_pid_t profile_id);
-
-#endif /* __BTC_MANAGE_H__ */
+const uint8_t *esp_bt_dev_get_address(void)
+{
+    if (esp_bluedroid_get_status() != ESP_BLUEDROID_STATUS_ENABLED) {
+	return NULL;
+    }
+    return controller_get_interface()->get_address()->address;
+}

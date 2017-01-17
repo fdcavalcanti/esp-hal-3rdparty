@@ -12,17 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __BTC_MANAGE_H__
-#define __BTC_MANAGE_H__
+#ifndef __ESP_BT_DEVICE_H__
+#define __ESP_BT_DEVICE_H__
 
-#include "bta_api.h"
-#include "btc_task.h"
-#include "esp_bt_defs.h"
+#include <stdint.h>
+#include <stdbool.h>
 
-/* reset gatt callback table */
-void esp_profile_cb_reset(void);
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-int btc_profile_cb_set(btc_pid_t profile_id, void *cb);
-void *btc_profile_cb_get(btc_pid_t profile_id);
+/**
+ *
+ * @brief      Get bluetooth device address.  Must use after "esp_bluedroid_enable".
+ * 
+ * @return     bluetooth device address (six bytes), or NULL if bluetooth stack is not enabled
+ */
+const uint8_t *esp_bt_dev_get_address(void);
 
-#endif /* __BTC_MANAGE_H__ */
+#ifdef __cplusplus
+}
+#endif
+
+
+#endif /* __ESP_BT_DEVICE_H__ */
