@@ -15,7 +15,9 @@
 #ifndef OS_H
 #define OS_H
 #include <sys/types.h>
+#ifndef __NuttX__
 #include "esp_types.h"
+#endif
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>

@@ -30,7 +30,9 @@
 #include "crypto/aes_wrap.h"
 #include "crypto/ccmp.h"
 #include "crypto/sha256.h"
+#ifndef __NuttX__
 #include "esp_rom_sys.h"
+#endif
 #include "common/bss.h"
 #include "esp_common_i.h"
 #include "esp_owe_i.h"
