@@ -9,7 +9,6 @@
 #include "soc/i2s_reg.h"
 #include "esp_private/periph_ctrl.h"
 #include "esp_private/esp_clk.h"
-#include "bootloader_clock.h"
 #include "hal/wdt_hal.h"
 
 #include "esp_private/spi_share_hw_ctrl.h"
