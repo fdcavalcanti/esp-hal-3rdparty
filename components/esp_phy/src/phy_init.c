@@ -16,15 +16,22 @@
 #include "esp_phy_init.h"
 #include "esp_mac.h"
 #include "esp_log.h"
+#ifndef __NuttX__
 #include "nvs.h"
 #include "nvs_flash.h"
+#endif
 #include "esp_efuse.h"
 #include "esp_timer.h"
 #include "esp_private/esp_sleep_internal.h"
 #include "esp_check.h"
 #include "sdkconfig.h"
+#ifdef __NuttX__
+#include <nuttx/mutex.h>
+#include <nuttx/spinlock.h>
+#else
 #include "freertos/FreeRTOS.h"
 #include "freertos/portmacro.h"
+#endif
 #include "endian.h"
 #include "esp_private/phy.h"
 #include "phy_init_data.h"
@@ -50,6 +57,23 @@
 #endif
 #include "hal/efuse_hal.h"
 
+#if SOC_PM_MODEM_RETENTION_BY_REGDMA
+#include "esp_private/sleep_retention.h"
+#endif
+
+#ifdef __NuttX__
+#define ENTER_CRITICAL_SECTION(lock)    do { g_flags = spin_lock_irqsave(lock); } while(0)
+#define LEAVE_CRITICAL_SECTION(lock)    spin_unlock_irqrestore((lock), g_flags)
+
+static spinlock_t periph_spinlock;
+static irqstate_t g_flags;
+#else
+#define ENTER_CRITICAL_SECTION(lock)    portENTER_CRITICAL_SAFE(lock)
+#define LEAVE_CRITICAL_SECTION(lock)    portEXIT_CRITICAL_SAFE(lock)
+
+static portMUX_TYPE periph_spinlock = portMUX_INITIALIZER_UNLOCKED;
+#endif
+
 #if CONFIG_IDF_TARGET_ESP32
 extern wifi_mac_time_update_cb_t s_wifi_mac_time_update_cb;
 #endif
@@ -73,7 +97,11 @@ static int64_t s_phy_rf_en_ts = 0;
 #endif
 
 /* PHY spinlock for libphy.a */
+#ifdef __NuttX__
+static spinlock_t s_phy_int_mux;
+#else
 static DRAM_ATTR portMUX_TYPE s_phy_int_mux = portMUX_INITIALIZER_UNLOCKED;
+#endif
 
 /* Indicate PHY is calibrated or not */
 static bool s_is_phy_calibrated = false;
@@ -213,12 +241,8 @@ esp_err_t phy_clear_used_time(esp_phy_modem_t modem) {
 
 uint32_t IRAM_ATTR phy_enter_critical(void)
 {
-    if (xPortInIsrContext()) {
-        portENTER_CRITICAL_ISR(&s_phy_int_mux);
+    ENTER_CRITICAL_SECTION(&s_phy_int_mux);
 
-    } else {
-        portENTER_CRITICAL(&s_phy_int_mux);
-    }
     // Interrupt level will be stored in current tcb, so always return zero.
     return 0;
 }
@@ -226,11 +250,7 @@ uint32_t IRAM_ATTR phy_enter_critical(void)
 void IRAM_ATTR phy_exit_critical(uint32_t level)
 {
     // Param level don't need any more, ignore it.
-    if (xPortInIsrContext()) {
-        portEXIT_CRITICAL_ISR(&s_phy_int_mux);
-    } else {
-        portEXIT_CRITICAL(&s_phy_int_mux);
-    }
+    LEAVE_CRITICAL_SECTION(&s_phy_int_mux);
 }
 
 #if CONFIG_IDF_TARGET_ESP32
@@ -437,7 +457,11 @@ void esp_phy_modem_init(void)
     s_phy_modem_init_ref++;
 #if SOC_PM_MODEM_RETENTION_BY_BACKUPDMA
     if (s_phy_digital_regs_mem == NULL) {
+#ifdef __NuttX__
+        s_phy_digital_regs_mem = (uint32_t *)kmm_malloc(SOC_PHY_DIG_REGS_MEM_SIZE);
+#else
         s_phy_digital_regs_mem = (uint32_t *)heap_caps_malloc(SOC_PHY_DIG_REGS_MEM_SIZE, MALLOC_CAP_DMA|MALLOC_CAP_INTERNAL);
+#endif
     }
 #endif // SOC_PM_MODEM_RETENTION_BY_BACKUPDMA
 #if SOC_PM_SUPPORT_PMU_MODEM_STATE && CONFIG_ESP_WIFI_ENHANCED_LIGHT_SLEEP
@@ -546,6 +570,7 @@ IRAM_ATTR void esp_mac_bb_power_down(void)
 }
 #endif // CONFIG_MAC_BB_PD
 
+#ifndef __NuttX__
 // PHY init data handling functions
 #if CONFIG_ESP_PHY_INIT_DATA_IN_PARTITION
 
@@ -660,6 +685,7 @@ void esp_phy_release_init_data(const esp_phy_init_data_t* init_data)
     // no-op
 }
 #endif // CONFIG_ESP_PHY_INIT_DATA_IN_PARTITION
+#endif // !__NuttX__
 
 
 // PHY calibration data handling functions
@@ -667,6 +693,8 @@ static const char* PHY_NAMESPACE = "phy";
 static const char* PHY_CAL_VERSION_KEY = "cal_version";
 static const char* PHY_CAL_MAC_KEY = "cal_mac";
 static const char* PHY_CAL_DATA_KEY = "cal_data";
+
+#ifndef __NuttX__
 
 static esp_err_t load_cal_data_from_nvs_handle(nvs_handle_t handle,
         esp_phy_calibration_data_t* out_cal_data);
@@ -815,6 +843,8 @@ static esp_err_t store_cal_data_to_nvs_handle(nvs_handle_t handle,
     return err;
 }
 
+#endif // !__NuttX__
+
 #if CONFIG_ESP_PHY_REDUCE_TX_POWER
 static void __attribute((unused)) esp_phy_reduce_tx_power(esp_phy_init_data_t* init_data)
 {
@@ -917,6 +947,7 @@ void esp_phy_load_cal_and_init(void)
 #else
     esp_phy_release_init_data(init_data);
 #endif
+#ifndef __NuttX__
 #if CONFIG_ESP_PHY_ENABLED && SOC_DEEP_SLEEP_SUPPORTED
     ESP_ERROR_CHECK(esp_deep_sleep_register_phy_hook(&phy_close_rf));
 #endif
@@ -925,10 +956,12 @@ void esp_phy_load_cal_and_init(void)
     ESP_ERROR_CHECK(esp_deep_sleep_register_phy_hook(&phy_xpd_tsens));
 #endif
 #endif
+#endif
 
     free(cal_data); // PHY maintains a copy of calibration data, so we can free this
 }
 
+#ifndef __NuttX__
 #if CONFIG_ESP_PHY_MULTIPLE_INIT_DATA_BIN
 static esp_err_t phy_crc_check_init_data(uint8_t* init_data, const uint8_t* checksum, size_t init_data_length)
 {
@@ -1174,6 +1207,7 @@ esp_err_t esp_phy_update_country_info(const char *country)
 #endif
     return ESP_OK;
 }
+#endif
 
 void esp_wifi_power_domain_on(void) __attribute__((alias("esp_wifi_bt_power_domain_on")));
 void esp_wifi_power_domain_off(void) __attribute__((alias("esp_wifi_bt_power_domain_off")));
