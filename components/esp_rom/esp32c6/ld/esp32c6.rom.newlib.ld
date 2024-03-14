@@ -23,9 +23,11 @@
 _isatty_r = 0x400004d4;
 strdup = 0x40000530;
 strndup = 0x40000554;
+#ifndef  __NuttX__
 rand_r = 0x4000058c;
 rand = 0x40000590;
 srand = 0x40000594;
+#endif
 atoi = 0x400005a0;
 atol = 0x400005a4;
 strtol = 0x400005a8;
