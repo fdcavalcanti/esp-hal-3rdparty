@@ -16,7 +16,7 @@
 #define OS_H
 #include <sys/types.h>
 #ifdef __NuttX__
-#include "xtensa_mm.h"
+#include <nuttx/kmalloc.h>
 #else
 #include "esp_types.h"
 #endif
