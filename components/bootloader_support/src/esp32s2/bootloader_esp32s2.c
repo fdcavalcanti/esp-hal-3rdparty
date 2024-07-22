@@ -174,7 +174,11 @@ esp_err_t bootloader_init(void)
     bootloader_flash_update_id();
     // Check and run XMC startup flow
     if ((ret = bootloader_flash_xmc_startup()) != ESP_OK) {
+#ifdef __NuttX__
+        ESP_EARLY_LOGE(TAG, "failed when running XMC startup flow, reboot!");
+#else
         ESP_LOGE(TAG, "failed when running XMC startup flow, reboot!");
+#endif
         return ret;
     }
     // read bootloader header
