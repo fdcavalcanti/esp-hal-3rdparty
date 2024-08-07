@@ -70,5 +70,7 @@ __strtok_r = 0x4001af18;
 strtok_r = 0x4001af7c;
 strupr = 0x40008084;
 toascii = 0x4001af90;
+#ifndef __NuttX__
 tolower = 0x40008158;
 toupper = 0x40008174;
+#endif
