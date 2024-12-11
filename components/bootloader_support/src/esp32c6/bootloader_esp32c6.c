@@ -45,6 +45,9 @@
 #include "hal/lpwdt_ll.h"
 #include "hal/regi2c_ctrl_ll.h"
 #include "hal/brownout_ll.h"
+#ifdef __NuttX__
+#include "esp_efuse_utility.h"
+#endif
 
 static const char *TAG = "boot.esp32c6";
 

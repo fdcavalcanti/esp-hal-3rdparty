@@ -43,6 +43,9 @@
 #include "hal/efuse_hal.h"
 #include "hal/rwdt_ll.h"
 #include "hal/brownout_ll.h"
+#ifdef __NuttX__
+#include "esp_efuse_utility.h"
+#endif
 
 static const char *TAG = "boot.esp32c3";
 
