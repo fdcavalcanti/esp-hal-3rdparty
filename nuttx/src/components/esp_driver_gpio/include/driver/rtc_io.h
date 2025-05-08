@@ -25,6 +25,16 @@ extern "C" {
  */
 bool rtc_gpio_is_valid_gpio(gpio_num_t gpio_num);
 
+/**
+ * @brief Enable hold function on an RTC IO pad
+ *
+ * @param gpio_num GPIO number (e.g. GPIO_NUM_12)
+ * @return
+ *     - ESP_OK Success
+ *     - ESP_ERR_INVALID_ARG The IO is not an RTC IO
+ */
+esp_err_t rtc_gpio_hold_en(gpio_num_t gpio_num);
+
 #define RTC_GPIO_IS_VALID_GPIO(gpio_num) rtc_gpio_is_valid_gpio(gpio_num)
 
 #if SOC_RTCIO_PIN_COUNT > 0
