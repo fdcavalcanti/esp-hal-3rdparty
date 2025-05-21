@@ -93,7 +93,9 @@
 #ifdef CONFIG_IDF_TARGET_ESP32
 #include "esp32/rom/cache.h"
 #include "esp32/rom/rtc.h"
+#ifndef __NuttX__
 #include "esp_private/gpio.h"
+#endif
 #include "esp_private/sleep_gpio.h"
 #elif CONFIG_IDF_TARGET_ESP32S2
 #include "esp32s2/rom/rtc.h"
