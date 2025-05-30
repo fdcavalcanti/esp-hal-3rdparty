@@ -35,7 +35,11 @@ static void crypto_dump_verify_info(u32 flags)
 {
     char dump_buffer[1024];
 
+#ifdef __NuttX__
+    esp_mbedtls_x509_crt_verify_info(dump_buffer, 1024, "  ! ", flags);
+#else
     mbedtls_x509_crt_verify_info(dump_buffer, 1024, "  ! ", flags);
+#endif
     wpa_printf(MSG_ERROR, "%s", dump_buffer);
 }
 #else

@@ -624,7 +624,7 @@ static int tls_create_mbedtls_handle(struct tls_connection *conn,
 #if defined(CONFIG_MBEDTLS_SSL_PROTO_TLS1_3) && !defined(CONFIG_TLSV13)
     /* Disable TLSv1.3 even when enabled in MbedTLS and not enabled in WiFi config.
      * TODO: Remove Kconfig option for TLSv1.3 when it is matured enough */
-    mbedtls_ssl_conf_max_tls_version(&tls->conf, MBEDTLS_SSL_VERSION_TLS1_2);
+    esp_mbedtls_ssl_conf_max_tls_version(&tls->conf, MBEDTLS_SSL_VERSION_TLS1_2);
 #endif /* CONFIG_MBEDTLS_SSL_PROTO_TLS1_3 && !CONFIG_TLSV13 */
 
     ret = mbedtls_ssl_setup(&tls->ssl, &tls->conf);
