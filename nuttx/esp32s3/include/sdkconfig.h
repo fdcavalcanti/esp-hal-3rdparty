@@ -954,6 +954,10 @@
 #  define CONFIG_SPIRAM_MODE_OCT 1
 #endif
 
+#ifndef CONFIG_SMP
+#  define CONFIG_ESP_SYSTEM_SINGLE_CORE_MODE 1
+#endif
+
 /* UART Console Settings */
 
 #if defined(CONFIG_UART0_SERIAL_CONSOLE) && defined(CONFIG_ESP32S3_UART0)
