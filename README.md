@@ -2,112 +2,118 @@
 
 HAL (Hardware Abstraction Layer) components - including Wi-Fi drivers - for Espressif chips intended to be used by 3rd Party Frameworks, like NuttX and Zephyr.
 
-This repository provides automatically synced branches from IDF, updated by scripts under given rules.
+This repository provides automatically synchronized branches from ESP-IDF, updated by scripts according to specific rules.
 
-Except for the scripts, no manual development happens in this branch.
+Except for the synchronization scripts, no manual development occurs in this branch.
 
 > **Warning**
 > Please don't open any issues in this repository. It's intended to be used by NuttX or Zephyr.
-> If you find anything you want to report, please report an issue on the OS repository.
+> If you find anything you want to report, please report an issue on the respective OS repository.
 
-## Branch naming convention
+## Sync Branches: `sync/[branch].[name]`
 
-### sync/[branch].[name]
-
-These are the automatically updated sync branches.
+These are the automatically updated synchronization branches.
 
 Where:
 
-- `sync` means this is a branch maintained by the script.
-- `[branch]`: the IDF branch the branch is synced from, e.g. `master`, `release/v5.0`
-- `[name]`: either a letter (whose file list will be described somewhere), or a single component (in case someone needs it...)
+- `sync` indicates this is a branch maintained by the synchronization script
+- `[branch]`: the ESP-IDF branch this branch is synchronized from, e.g., `master`, `release/v5.0`
+- `[name]`: either a letter identifier (corresponding to a predefined component list), or a single component name for specific use cases
 
-#### Existing branches
-
-- [`sync/release_v5.1.c`](../../tree/sync/release_v5.1.c):
-    - Based on ESP-IDF `release/v5.1` branch.
-    - Includes components: `bootloader`, `bootloader_support`, `bt`, `efuse`, `esp_adc`,
-    `esp_app_format`, `esp_coex`, `esp_common`, `esp_event`, `esp_hw_support`, `esp_phy`,
-    `esp_rom`, `esp_system`, `esp_timer`, `esp_wifi`, `hal`, `log`, `mbedtls`, `newlib`,
-    `partition_table`, `riscv`, `soc`, `spi_flash`, `wpa_supplicant`, `xtensa`.
-
-- [`sync/release_v5.2.a`](../../tree/sync/release_v5.2.a):
-    - Based on ESP-IDF `release/v5.2` branch.
-    - Includes components: `bootloader`, `bootloader_support`, `bt`, `efuse`, `esp_adc`,
-    `esp_app_format`, `esp_coex`, `esp_common`, `esp_event`, `esp_hw_support`, `esp_phy`,
-    `esp_rom`, `esp_system`, `esp_timer`, `esp_wifi`, `hal`, `log`, `mbedtls`, `newlib`,
-    `partition_table`, `riscv`, `soc`, `spi_flash`, `wpa_supplicant`, `xtensa`.
+### Active Branches
 
 - [`sync/master.a`](../../tree/sync/master.a):
-    - Based on ESP-IDF `master` branch.
+    - Based on ESP-IDF `master` branch
     - Includes components: `bootloader`, `bootloader_support`, `bt`, `efuse`, `esp_adc`,
       `esp_app_format`, `esp_coex`, `esp_common`, `esp_event`, `esp_hw_support`, `esp_mm`,
       `esp_phy`, `esp_pm`, `esp_psram`, `esp_rom`, `esp_system`, `esp_timer`, `esp_wifi`,
       `hal`, `heap`, `ieee802154`, `log`, `mbedtls`, `newlib`, `partition_table`, `riscv`,
-      `soc`, `spi_flash`, `ulp`, `usb`, `wpa_supplicant`, `xtensa`.
+      `soc`, `spi_flash`, `ulp`, `usb`, `wpa_supplicant`, `xtensa`
 
-## Depreacated branches
+### Deprecated Branches
 
-The following branches are deprecated (not updated anymore):
+The following branches are deprecated and no longer updated:
 
 - [`sync-1-release_v5.1`](../../tree/sync-1-release_v5.1):
-    - Based on ESP-IDF `release/v5.1` branch.
+    - Based on ESP-IDF `release/v5.1` branch
     - Includes components: `bootloader_support`, `efuse`, `esp_app_format`, `esp_common`,
     `esp_event`, `esp_hw_support`, `esp_phy`, `esp_rom`, `esp_system`, `esp_timer`, `esp_wifi`,
-    `hal`, `log`, `mbedtls`, `newlib`, `riscv`, `soc`, `spi_flash`, `wpa_supplicant`, `xtensa`.
+    `hal`, `log`, `mbedtls`, `newlib`, `riscv`, `soc`, `spi_flash`, `wpa_supplicant`, `xtensa`
 
 - [`sync-2-release_v5.1`](../../tree/sync-2-release_v5.1):
-    - Based on ESP-IDF `release/v5.1` branch.
+    - Based on ESP-IDF `release/v5.1` branch
     - Includes components: `bootloader_support`, `bt`, `efuse`, `esp_app_format`, `esp_common`,
     `esp_event`, `esp_hw_support`, `esp_phy`, `esp_rom`, `esp_system`, `esp_timer`, `esp_wifi`,
-    `hal`, `log`, `mbedtls`, `newlib`, `riscv`, `soc`, `spi_flash`, `wpa_supplicant`, `xtensa`.
+    `hal`, `log`, `mbedtls`, `newlib`, `riscv`, `soc`, `spi_flash`, `wpa_supplicant`, `xtensa`
 
 - [`sync-3-release_v5.1`](../../tree/sync-3-release_v5.1):
-    - Based on ESP-IDF `release/v5.1` branch.
+    - Based on ESP-IDF `release/v5.1` branch
     - Includes components: `bootloader`, `bootloader_support`, `bt`, `efuse`, `esp_adc`,
     `esp_app_format`, `esp_coex`, `esp_common`, `esp_event`, `esp_hw_support`, `esp_phy`,
     `esp_rom`, `esp_system`, `esp_timer`, `esp_wifi`, `hal`, `log`, `mbedtls`, `newlib`, `riscv`,
-    `soc`, `spi_flash`, `wpa_supplicant`, `xtensa`.
+    `soc`, `spi_flash`, `wpa_supplicant`, `xtensa`
 
 - [`sync/release_v5.1.b`](../../tree/sync/release_v5.1.b):
-    - Based on ESP-IDF `release/v5.1` branch.
+    - Based on ESP-IDF `release/v5.1` branch
     - Includes components: `bootloader`, `bootloader_support`, `bt`, `efuse`, `esp_adc`,
     `esp_app_format`, `esp_coex`, `esp_common`, `esp_event`, `esp_hw_support`, `esp_phy`,
     `esp_rom`, `esp_system`, `esp_timer`, `esp_wifi`, `hal`, `log`, `mbedtls`, `newlib`, `riscv`,
-    `soc`, `spi_flash`, `wpa_supplicant`, `xtensa`.
+    `soc`, `spi_flash`, `wpa_supplicant`, `xtensa`
 
-#### Restrictions
+- [`sync/release_v5.1.c`](../../tree/sync/release_v5.1.c):
+    - Based on ESP-IDF `release/v5.1` branch
+    - Includes components: `bootloader`, `bootloader_support`, `bt`, `efuse`, `esp_adc`,
+    `esp_app_format`, `esp_coex`, `esp_common`, `esp_event`, `esp_hw_support`, `esp_phy`,
+    `esp_rom`, `esp_system`, `esp_timer`, `esp_wifi`, `hal`, `log`, `mbedtls`, `newlib`,
+    `partition_table`, `riscv`, `soc`, `spi_flash`, `wpa_supplicant`, `xtensa`
 
-1. Sync branches don't have common ancestors
+- [`sync/release_v5.2.a`](../../tree/sync/release_v5.2.a):
+    - Based on ESP-IDF `release/v5.2` branch
+    - Includes components: `bootloader`, `bootloader_support`, `bt`, `efuse`, `esp_adc`,
+    `esp_app_format`, `esp_coex`, `esp_common`, `esp_event`, `esp_hw_support`, `esp_phy`,
+    `esp_rom`, `esp_system`, `esp_timer`, `esp_wifi`, `hal`, `log`, `mbedtls`, `newlib`,
+    `partition_table`, `riscv`, `soc`, `spi_flash`, `wpa_supplicant`, `xtensa`
 
-   This may cause some problems when you merge or pick from these branches
+## Release Branches: `release/[branch]`
 
-2. Can't easily modify the file list of an existing branch
-
-   The tool used by the sync script converts commits of IDF into new ones on the given branch. The history is kept while the files are filtered according to the given file list.
-
-   The generated commits will have the same SHA as long as the commit author, date, message and change list are the same.
-
-   Any modification to the script's strategy of a sync branch (including modifying the file list) will change the SHA of the commits, forbidding the generated branch from being merged (pushed) to the existing one.
-
-   When we need to modify the file list or any other part of the commit, it's suggested to create a new sync branch.
-
-### release/[branch]
-
-These are release branches intended to be used by the 3rd Party Frameworks, like NuttX. These branches include modifications made on the top of a sync branch needed to enable it to be used by some OS.
+These are release branches intended to be used by 3rd Party Frameworks, such as NuttX. These branches include modifications made on top of a sync branch to enable compatibility with specific operating systems.
 
 Where:
-- `branch` means the branch used by the sync branch this release is derived from.
+- `[branch]` refers to the synchronization branch (as listed above) from which this release branch is derived
+
+### Active Branches
+
+- [`release/master.a`](../../tree/release/master.a):
+    - Based on [`sync/master.a`](../../tree/sync/master.a) branch
+    - Currently used by NuttX, referenced by commit SHA
+
+### Deprecated Branches
 
 - [`release/v5.1`](../../tree/release/v5.1):
-    - Based on [`sync-2-release_v5.1`](../../tree/sync-2-release_v5.1) branch.
-    - Deprecated: cloned by the branch name on NuttX.
+    - Based on [`sync-2-release_v5.1`](../../tree/sync-2-release_v5.1) branch
+    - Deprecated: referenced by branch name on NuttX
 - [`release/v5.1.a`](../../tree/release/v5.1.a):
-    - Based on [`sync-2-release_v5.1`](../../tree/sync-2-release_v5.1) branch.
-    - Currently used by NuttX, cloned by commit SHA.
+    - Based on [`sync-2-release_v5.1`](../../tree/sync-2-release_v5.1) branch
+    - Deprecated: referenced by commit SHA
 - [`release/v5.1.b`](../../tree/release/v5.1.b):
-    - Based on [`sync/release_v5.1.b`](../../tree/sync/release_v5.1.b) branch.
-    - Currently used by NuttX, cloned by commit SHA.
+    - Based on [`sync/release_v5.1.b`](../../tree/sync/release_v5.1.b) branch
+    - Deprecated: referenced by commit SHA
 - [`release/v5.1.c`](../../tree/release/v5.1.c):
-    - Based on [`sync/release_v5.1.c`](../../tree/sync/release_v5.1.c) branch.
-    - Currently used by NuttX, cloned by commit SHA.
+    - Based on [`sync/release_v5.1.c`](../../tree/sync/release_v5.1.c) branch
+    - Deprecated: referenced by commit SHA
+
+## General Restrictions
+
+1. **Sync branches don't have common ancestors**
+
+   This may cause problems when you merge or cherry-pick from these branches.
+
+2. **File list modifications are not easily supported for existing branches**
+
+   The synchronization script converts ESP-IDF commits into new commits on the target branch. The history is preserved while files are filtered according to the specified component list.
+
+   The generated commits will have the same SHA as long as the commit author, date, message, and change list remain identical.
+
+   Any modification to the synchronization strategy of a sync branch (including modifying the component list) will change the SHA of the commits, preventing the generated branch from being merged (pushed) to the existing branch.
+
+   When modifying the component list or any other aspect of the synchronization process, it's recommended to create a new sync branch.
