@@ -11,6 +11,7 @@ fi
 # Usage: clone_idf ESP_IDF_BRANCH
 clone_idf() {
     git clone --single-branch --branch "$1" "${IDF_URL}" .
+    git --no-pager show --oneline -s HEAD
 }
 
 # Usage: find_pattern STRING
