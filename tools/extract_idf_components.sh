@@ -30,11 +30,23 @@ check_links() {
 
 # Usage: extract_components ESP_IDF_BRANCH SYNC_BRANCH_NAME ARGS...
 extract_components() {
-    ESP_IDF_BRANCH=$1
-    SYNC_BRANCH_NAME=$2${DEBUG_SUFFIX}
-    ARGS="${@:3}"
+    # Get the script's directory (base location)
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    BASE_DIR="$(dirname "${SCRIPT_DIR}")"
 
-    FOLDER_NAME="esp-idf/${SYNC_BRANCH_NAME}"
+    ESP_IDF_BRANCH=$1
+    SYNC_BRANCH_NAME=$2
+
+    # Replace '/' with '_' in SYNC_BRANCH_NAME for the filename
+    COMPONENTS_FILE="tools/$(echo "${SYNC_BRANCH_NAME}" | sed 's/\//_/g').txt"
+
+    # Check if the file exists relative to the script's base location
+    if [ ! -f "${BASE_DIR}/${COMPONENTS_FILE}" ]; then
+        echo "Warning: Components file not found: ${BASE_DIR}/${COMPONENTS_FILE}"
+        exit 1
+    fi
+
+    FOLDER_NAME="esp-idf/${SYNC_BRANCH_NAME}${DEBUG_SUFFIX}"
 
     rm -rf ${FOLDER_NAME}
     mkdir -p ${FOLDER_NAME}
@@ -45,15 +57,15 @@ extract_components() {
 
     clone_idf "${ESP_IDF_BRANCH}"
 
-    echo "Extract to branch ${SYNC_BRANCH_NAME} with arg list: '$ARGS'"
+    echo "Extract to branch ${SYNC_BRANCH_NAME}${DEBUG_SUFFIX}"
 
-    git filter-repo "${@:3}"
+    git filter-repo --paths-from-file "${BASE_DIR}/${COMPONENTS_FILE}" "${@:3}"
 
     check_links
 
-    git checkout -B ${SYNC_BRANCH_NAME}
-    git push ${ESP_HAL_3RDPARTY_URL} ${SYNC_BRANCH_NAME} || {
-        push_to_temporary_branch ${ESP_HAL_3RDPARTY_URL} ${SYNC_BRANCH_NAME}
+    git checkout -B ${SYNC_BRANCH_NAME}${DEBUG_SUFFIX}
+    git push ${ESP_HAL_3RDPARTY_URL} ${SYNC_BRANCH_NAME}${DEBUG_SUFFIX} || {
+        push_to_temporary_branch ${ESP_HAL_3RDPARTY_URL} ${SYNC_BRANCH_NAME}${DEBUG_SUFFIX}
         SET_RUN_FORCE_PUSH="true"
     }
     git clean -xdff
@@ -61,7 +73,7 @@ extract_components() {
     popd
 
     if [ -n "${SET_RUN_FORCE_PUSH}" ]; then
-        force_push_job "${SYNC_BRANCH_NAME}" >> force_push.yml
+        force_push_job "${SYNC_BRANCH_NAME}${DEBUG_SUFFIX}" >> force_push.yml
         echo "Content of force_push.yml:"
         cat force_push.yml
     fi
@@ -121,17 +133,6 @@ nulljob() {
     echo ""
 }
 
-# Usage get_arg_by_components [COMPONENTS...]
-get_arg_by_components() {
-    RET=""
-    for COMPONENT in $*
-    do
-        # There will be an redundant trailing space
-        RET+="--path components/${COMPONENT} "
-    done
-    echo ${RET}
-}
-
 ############## Conditional Pipeline ###################
 
 # During the development of the sync branches, it may be necessary to force push-some of them to the
@@ -154,51 +155,15 @@ MSG_CALLBACK="
         return re.sub(br'espressif/esp-idf([^\]])', br'[ESP_IDF]\1', msg1)
     "
 
-ARG=$(cat << EOF
-      ${LIC_ARG} $(get_arg_by_components \
-                   bootloader \
-                   bootloader_support \
-                   bt \
-                   efuse \
-                   esp_adc \
-                   esp_app_format \
-                   esp_coex \
-                   esp_common \
-                   esp_event \
-                   esp_hw_support \
-                   esp_mm \
-                   esp_phy \
-                   esp_pm \
-                   esp_psram \
-                   esp_rom \
-                   esp_system \
-                   esp_timer \
-                   esp_wifi \
-                   hal \
-                   heap \
-                   ieee802154 \
-                   log \
-                   mbedtls \
-                   newlib \
-                   partition_table \
-                   riscv \
-                   soc \
-                   spi_flash \
-                   ulp \
-                   usb \
-                   wpa_supplicant\
-                   xtensa \
-                   )
-EOF
-)
+# The components to be extracted are defined in the tools/<sync_branch_name>.txt file. Please note
+# that the file name is the sync branch name with '/' replaced with '_'.
 
-extract_components "master" "sync/master.a" ${ARG} --message-callback "${MSG_CALLBACK}"
+extract_components "master" "sync/master.b" --message-callback "${MSG_CALLBACK}"
 
 # Add new one here if you have new requirement
 
 # Push to protected branch will cause that branch to appear on Github.
 # Try with non-protected branch first.
-# ARG="${LIC_ARG} $(get_arg_by_components esp_event esp_phy esp_wifi mbedtls wpa_supplicant)"
 # extract_components "release/v5.0" "test-sync-1-release_v5.0" ${ARG} --message-callback "${MSG_CALLBACK}"
 
 # If `SET_RUN_FORCE_PUSH` isn't set, add a nulljob to the child pipeline
@@ -210,6 +175,46 @@ else
 fi
 
 ############## Deprecated Syncs ###################
+
+# ARG=$(cat << EOF
+#       ${LIC_ARG} $(get_arg_by_components \
+#                    bootloader \
+#                    bootloader_support \
+#                    bt \
+#                    efuse \
+#                    esp_adc \
+#                    esp_app_format \
+#                    esp_coex \
+#                    esp_common \
+#                    esp_event \
+#                    esp_hw_support \
+#                    esp_mm \
+#                    esp_phy \
+#                    esp_pm \
+#                    esp_psram \
+#                    esp_rom \
+#                    esp_system \
+#                    esp_timer \
+#                    esp_wifi \
+#                    hal \
+#                    heap \
+#                    ieee802154 \
+#                    log \
+#                    mbedtls \
+#                    newlib \
+#                    partition_table \
+#                    riscv \
+#                    soc \
+#                    spi_flash \
+#                    ulp \
+#                    usb \
+#                    wpa_supplicant\
+#                    xtensa \
+#                    )
+# EOF
+# )
+
+# extract_components "master" "sync/master.a" ${ARG} --message-callback "${MSG_CALLBACK}"
 
 # ARG=$(cat << EOF
 #       ${LIC_ARG} $(get_arg_by_components \

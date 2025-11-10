@@ -22,13 +22,9 @@ Where:
 
 ### Active Branches
 
-- [`sync/master.a`](../../tree/sync/master.a):
+- [`sync/master.b`](../../tree/sync/master.b):
     - Based on ESP-IDF `master` branch
-    - Includes components: `bootloader`, `bootloader_support`, `bt`, `efuse`, `esp_adc`,
-      `esp_app_format`, `esp_coex`, `esp_common`, `esp_event`, `esp_hw_support`, `esp_mm`,
-      `esp_phy`, `esp_pm`, `esp_psram`, `esp_rom`, `esp_system`, `esp_timer`, `esp_wifi`,
-      `hal`, `heap`, `ieee802154`, `log`, `mbedtls`, `newlib`, `partition_table`, `riscv`,
-      `soc`, `spi_flash`, `ulp`, `usb`, `wpa_supplicant`, `xtensa`
+    - Includes components defined at [`tools/sync_master.b`](../../tree/sync/master.b/tools/sync_master.b.txt)
 
 ### Deprecated Branches
 
@@ -74,6 +70,14 @@ The following branches are deprecated and no longer updated:
     `esp_rom`, `esp_system`, `esp_timer`, `esp_wifi`, `hal`, `log`, `mbedtls`, `newlib`,
     `partition_table`, `riscv`, `soc`, `spi_flash`, `wpa_supplicant`, `xtensa`
 
+- [`sync/master.a`](../../tree/sync/master.a):
+    - Based on ESP-IDF `master` branch
+    - Includes components: `bootloader`, `bootloader_support`, `bt`, `efuse`, `esp_adc`,
+      `esp_app_format`, `esp_coex`, `esp_common`, `esp_event`, `esp_hw_support`, `esp_mm`,
+      `esp_phy`, `esp_pm`, `esp_psram`, `esp_rom`, `esp_system`, `esp_timer`, `esp_wifi`,
+      `hal`, `heap`, `ieee802154`, `log`, `mbedtls`, `newlib`, `partition_table`, `riscv`,
+      `soc`, `spi_flash`, `ulp`, `usb`, `wpa_supplicant`, `xtensa`
+
 ## Release Branches: `release/[branch]`
 
 These are release branches intended to be used by 3rd Party Frameworks, such as NuttX. These branches include modifications made on top of a sync branch to enable compatibility with specific operating systems.
@@ -83,8 +87,8 @@ Where:
 
 ### Active Branches
 
-- [`release/master.a`](../../tree/release/master.a):
-    - Based on [`sync/master.a`](../../tree/sync/master.a) branch
+- [`release/master.b`](../../tree/release/master.b):
+    - Based on [`sync/master.b`](../../tree/sync/master.b) branch
     - Currently used by NuttX, referenced by commit SHA
 
 ### Deprecated Branches
@@ -100,6 +104,9 @@ Where:
     - Deprecated: referenced by commit SHA
 - [`release/v5.1.c`](../../tree/release/v5.1.c):
     - Based on [`sync/release_v5.1.c`](../../tree/sync/release_v5.1.c) branch
+    - Deprecated: referenced by commit SHA
+- [`release/master.a`](../../tree/release/master.a):
+    - Based on [`sync/master.a`](../../tree/sync/master.a) branch
     - Deprecated: referenced by commit SHA
 
 ## General Restrictions
