@@ -103,7 +103,7 @@ mkpipeline() {
     echo "  GIT_STRATEGY: clone"
     echo ""
     echo "default:"
-    echo "  image: \$CI_DOCKER_REGISTRY/nuttx/target-test-env-v5.1"
+    echo "  image: \$CI_DOCKER_REGISTRY/esp-env-v5.1:1"
     echo "  tags:"
     echo "    - build"
     echo ""
