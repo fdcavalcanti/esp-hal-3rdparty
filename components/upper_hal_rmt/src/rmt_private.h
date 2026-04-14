@@ -76,6 +76,8 @@ extern "C" {
 
 #define RMT_ALLOW_INTR_PRIORITY_MASK ESP_INTR_FLAG_LOWMED
 
+#define RMT_GROUP_INTR_PRIORITY_UNINITIALIZED (-1)
+
 #define RMT_DMA_NODES_PING_PONG               2  // two nodes ping-pong
 
 // RMT is a slow peripheral, it only supports AHB-GDMA
@@ -139,6 +141,7 @@ struct rmt_group_t {
     rmt_tx_channel_t *tx_channels[RMT_LL_GET(TX_CANDIDATES_PER_INST)]; // array of RMT TX channels
     rmt_rx_channel_t *rx_channels[RMT_LL_GET(RX_CANDIDATES_PER_INST)]; // array of RMT RX channels
     rmt_sync_manager_t *sync_manager; // sync manager, this can be extended into an array if there're more sync controllers in one RMT group
+    int intr_priority;                /*!< ISR priority bitmask index for this group, or RMT_GROUP_INTR_PRIORITY_UNINITIALIZED */
 };
 
 struct rmt_channel_t {
@@ -229,6 +232,10 @@ struct rmt_rx_channel_t {
  * @return RMT group handle
  */
 rmt_group_t *rmt_acquire_group_handle(int group_id);
+
+bool rmt_set_intr_priority_to_group(rmt_group_t *group, int intr_priority);
+
+int rmt_isr_priority_to_flags(rmt_group_t *group);
 
 /**
  * @brief Release RMT group handle
