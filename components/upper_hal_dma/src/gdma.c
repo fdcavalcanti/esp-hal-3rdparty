@@ -28,6 +28,7 @@
 
 #include "gdma_priv.h"
 #include "esp_memory_utils.h"
+#include "platform/os.h"
 
 #define GDMA_INVALID_PERIPH_TRIG  (0x3F)
 #define SEARCH_REQUEST_RX_CHANNEL (1 << 0)
@@ -35,7 +36,7 @@
 #define GDMA_ALLOW_INTR_PRIORITY_MASK ESP_INTR_FLAG_LOWMED
 
 typedef struct gdma_platform_t {
-    portMUX_TYPE spinlock;                       // platform level spinlock, protect the group handle slots
+    DECLARE_CRIT_SECTION_LOCK_IN_STRUCT(spinlock)                       // platform level spinlock, protect the group handle slots
     gdma_group_t *groups[GDMA_LL_GET(INST_NUM)]; // array of GDMA group instances
 } gdma_platform_t;
 
@@ -50,7 +51,7 @@ static esp_err_t gdma_install_tx_interrupt(gdma_tx_channel_t *tx_chan);
 
 // gdma driver platform
 static gdma_platform_t s_platform = {
-    .spinlock = (portMUX_TYPE)portMUX_INITIALIZER_UNLOCKED,
+    INIT_CRIT_SECTION_LOCK_IN_STRUCT(spinlock)
 };
 
 typedef struct {
@@ -160,7 +161,7 @@ static esp_err_t do_allocate_gdma_channel(const gdma_channel_search_info_t *sear
         alloc_tx_channel->base.intr_priority = config->intr_priority;
         alloc_tx_channel->base.flags.isr_cache_safe = config->flags.isr_cache_safe;
         alloc_tx_channel->base.del = gdma_del_tx_channel; // set channel deletion function
-        alloc_tx_channel->base.spinlock = (portMUX_TYPE)portMUX_INITIALIZER_UNLOCKED;
+        INIT_CRIT_SECTION_LOCK_RUNTIME(&alloc_tx_channel->base.spinlock);
         *ret_tx_chan = &alloc_tx_channel->base; // return the installed channel
 #if SOC_GDMA_SUPPORT_WEIGHTED_ARBITRATION
         // set 1 as default weight, can be overwritten by user
@@ -177,7 +178,7 @@ static esp_err_t do_allocate_gdma_channel(const gdma_channel_search_info_t *sear
         alloc_rx_channel->base.intr_priority = config->intr_priority;
         alloc_rx_channel->base.flags.isr_cache_safe = config->flags.isr_cache_safe;
         alloc_rx_channel->base.del = gdma_del_rx_channel; // set channel deletion function
-        alloc_rx_channel->base.spinlock = (portMUX_TYPE)portMUX_INITIALIZER_UNLOCKED;
+        INIT_CRIT_SECTION_LOCK_RUNTIME(&alloc_rx_channel->base.spinlock);
         *ret_rx_chan = &alloc_rx_channel->base; // return the installed channel
 #if SOC_GDMA_SUPPORT_WEIGHTED_ARBITRATION
         // set 1 as default weight, can be overwritten by user
@@ -751,7 +752,7 @@ static gdma_group_t *gdma_try_alloc_group_handle(int group_id, void (*hal_init)(
         s_platform.groups[group_id] = group; // register to platform
 
         group->group_id = group_id;
-        group->spinlock = (portMUX_TYPE)portMUX_INITIALIZER_UNLOCKED;
+        INIT_CRIT_SECTION_LOCK_RUNTIME(&(group->spinlock));
         // enable APB to access GDMA registers
         PERIPH_RCC_ATOMIC() {
             gdma_ll_enable_bus_clock(group_id, true);
@@ -829,7 +830,7 @@ static gdma_pair_t *gdma_try_alloc_pair_handle(gdma_group_t *group, int pair_id)
         // initialize pair before registering to avoid accessing uninitialized pair
         pair->group = group;
         pair->pair_id = pair_id;
-        pair->spinlock = (portMUX_TYPE)portMUX_INITIALIZER_UNLOCKED;
+        INIT_CRIT_SECTION_LOCK_RUNTIME(&(pair->spinlock));
         // register the pair to the group
         group->pairs[pair_id] = pair;
     } else {
@@ -863,7 +864,7 @@ static esp_err_t gdma_del_tx_channel(gdma_channel_t *dma_channel)
     esp_os_exit_critical(&pair->spinlock);
 
     if (dma_channel->intr) {
-        esp_intr_free(dma_channel->intr);
+        esp_os_intr_free(dma_channel->intr);
         esp_os_enter_critical(&pair->spinlock);
         gdma_hal_enable_intr(hal, pair_id, GDMA_CHANNEL_DIRECTION_TX, UINT32_MAX, false); // disable all interrupt events
         gdma_hal_clear_intr(hal, pair->pair_id, GDMA_CHANNEL_DIRECTION_TX, UINT32_MAX); // clear all pending events
@@ -898,7 +899,7 @@ static esp_err_t gdma_del_rx_channel(gdma_channel_t *dma_channel)
     esp_os_exit_critical(&pair->spinlock);
 
     if (dma_channel->intr) {
-        esp_intr_free(dma_channel->intr);
+        esp_os_intr_free(dma_channel->intr);
         esp_os_enter_critical(&pair->spinlock);
         gdma_hal_enable_intr(hal, pair_id, GDMA_CHANNEL_DIRECTION_RX, UINT32_MAX, false); // disable all interrupt events
         gdma_hal_clear_intr(hal, pair->pair_id, GDMA_CHANNEL_DIRECTION_RX, UINT32_MAX); // clear all pending events
@@ -973,7 +974,7 @@ void gdma_default_rx_isr(void *args)
     }
 
     if (need_yield) {
-        portYIELD_FROM_ISR();
+        OS_PORT_YIELD_FROM_ISR();
     }
 }
 
@@ -1001,7 +1002,7 @@ void gdma_default_tx_isr(void *args)
         need_yield |= tx_chan->cbs.on_descr_err(&tx_chan->base, NULL, tx_chan->user_data);
     }
     if (need_yield) {
-        portYIELD_FROM_ISR();
+        OS_PORT_YIELD_FROM_ISR();
     }
 }
 
@@ -1037,7 +1038,13 @@ static esp_err_t gdma_install_rx_interrupt(gdma_rx_channel_t *rx_chan)
         .bind_by.name = tx_rx_share_irq ? pair_signals->name : NULL,
     };
     intr_handle_t intr = NULL;
+#ifndef __NuttX__
     ret = esp_intr_alloc_info(&intr_info, &intr);
+#else
+    ret = esp_os_intr_alloc_intrstatus(gdma_periph_signals.groups[group->group_id].pairs[pair_id].rx_irq_id, isr_flags,
+                                       gdma_hal_get_intr_status_reg(hal, pair_id, GDMA_CHANNEL_DIRECTION_RX), GDMA_LL_RX_EVENT_MASK,
+                                       gdma_default_rx_isr, rx_chan, &intr);
+#endif
     ESP_GOTO_ON_ERROR(ret, err, TAG, "alloc interrupt failed");
     rx_chan->base.intr = intr;
 
@@ -1083,7 +1090,13 @@ static esp_err_t gdma_install_tx_interrupt(gdma_tx_channel_t *tx_chan)
         .bind_by.name = tx_rx_share_irq ? pair_signals->name : NULL,
     };
     intr_handle_t intr = NULL;
+#ifndef __NuttX__
     ret = esp_intr_alloc_info(&intr_info, &intr);
+#else
+    ret = esp_os_intr_alloc_intrstatus(gdma_periph_signals.groups[group->group_id].pairs[pair_id].tx_irq_id, isr_flags,
+                                       gdma_hal_get_intr_status_reg(hal, pair_id, GDMA_CHANNEL_DIRECTION_TX), GDMA_LL_TX_EVENT_MASK,
+                                       gdma_default_tx_isr, tx_chan, &intr);
+#endif
     ESP_GOTO_ON_ERROR(ret, err, TAG, "alloc interrupt failed");
     tx_chan->base.intr = intr;
 

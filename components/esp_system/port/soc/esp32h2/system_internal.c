@@ -21,6 +21,8 @@
 #include "soc/rtc.h"
 #include "esp_private/rtc_clk.h"
 #include "soc/uart_reg.h"
+#include "hal/cache_hal.h"
+#include "hal/cache_types.h"
 #if SOC_WDT_SUPPORTED || SOC_RTC_WDT_SUPPORTED
 #include "hal/wdt_hal.h"
 #endif

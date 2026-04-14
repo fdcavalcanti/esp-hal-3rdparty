@@ -7,13 +7,14 @@
 
 #include "esp_attr.h"
 #include <stdint.h>
-#include "freertos/FreeRTOS.h"
-#include "freertos/semphr.h"
+#include "platform/os.h"
 #include "hal/regi2c_ctrl.h"
 #include "esp_private/critical_section.h"
 
 // This lock is used to protect the analog i2c bus from being used concurrently
-DEFINE_CRIT_SECTION_LOCK_STATIC(mux);
+DEFINE_CRIT_SECTION_LOCK_STATIC(mux, __attribute__((unused)));
+
+ESP_HW_LOG_ATTR_TAG_DRAM(TAG, "REGI2C");
 
 uint8_t regi2c_ctrl_read_reg(uint8_t block, uint8_t host_id, uint8_t reg_add)
 {

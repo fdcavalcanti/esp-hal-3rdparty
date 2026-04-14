@@ -34,7 +34,7 @@ rmt_group_t *rmt_acquire_group_handle(int group_id)
             new_group = true;
             s_platform.groups[group_id] = group;
             group->group_id = group_id;
-            group->spinlock = (portMUX_TYPE)portMUX_INITIALIZER_UNLOCKED;
+            INIT_CRIT_SECTION_LOCK_RUNTIME(&group->spinlock);
             // initial occupy_mask: 1111...100...0
             group->occupy_mask = UINT32_MAX & ~((1 << RMT_LL_GET(CHANS_PER_INST)) - 1);
             // group clock won't be configured at this stage, it will be set when allocate the first channel
@@ -163,7 +163,7 @@ static esp_err_t rmt_set_group_prescale(rmt_channel_t *chan, uint32_t expect_res
     // group prescale is shared by all rmt_channel, only set once. use critical section to avoid race condition.
     bool prescale_conflict = false;
     group_resolution_hz = periph_src_clk_hz / group_prescale;
-    portENTER_CRITICAL(&group->spinlock);
+    esp_os_enter_critical(&group->spinlock);
     if (group->resolution_hz == 0) {
         group->resolution_hz = group_resolution_hz;
         PERIPH_RCC_ATOMIC() {
@@ -173,7 +173,7 @@ static esp_err_t rmt_set_group_prescale(rmt_channel_t *chan, uint32_t expect_res
     } else {
         prescale_conflict = (group->resolution_hz != group_resolution_hz);
     }
-    portEXIT_CRITICAL(&group->spinlock);
+    esp_os_exit_critical(&group->spinlock);
     ESP_RETURN_ON_FALSE(!prescale_conflict, ESP_ERR_INVALID_ARG, TAG,
                         "group resolution conflict, already is %"PRIu32" but attempt to %"PRIu32"", group->resolution_hz, group_resolution_hz);
     ESP_LOGD(TAG, "group (%d) clock resolution:%"PRIu32"Hz", group_id, group->resolution_hz);
@@ -188,13 +188,13 @@ esp_err_t rmt_select_periph_clock(rmt_channel_handle_t chan, rmt_clock_source_t 
     rmt_group_t *group = chan->group;
     bool clock_selection_conflict = false;
     // check if we need to update the group clock source, group clock source is shared by all channels
-    portENTER_CRITICAL(&group->spinlock);
+    esp_os_enter_critical(&group->spinlock);
     if (group->clk_src == 0) {
         group->clk_src = clk_src;
     } else {
         clock_selection_conflict = (group->clk_src != clk_src);
     }
-    portEXIT_CRITICAL(&group->spinlock);
+    esp_os_exit_critical(&group->spinlock);
     ESP_RETURN_ON_FALSE(!clock_selection_conflict, ESP_ERR_INVALID_ARG, TAG,
                         "group clock conflict, already is %d but attempt to %d", group->clk_src, clk_src);
 
@@ -288,6 +288,52 @@ esp_err_t rmt_disable(rmt_channel_handle_t channel)
 {
     ESP_RETURN_ON_FALSE(channel, ESP_ERR_INVALID_ARG, TAG, "invalid argument");
     return channel->disable(channel);
+}
+
+bool rmt_set_intr_priority_to_group(rmt_group_t *group, int intr_priority)
+{
+    bool priority_conflict = false;
+    esp_os_enter_critical(&group->spinlock);
+    if (group->intr_priority == RMT_GROUP_INTR_PRIORITY_UNINITIALIZED) {
+        // intr_priority never allocated, accept user's value unconditionally
+        // intr_priority could only be set once here
+        group->intr_priority = intr_priority;
+    } else {
+        // group intr_priority already specified
+        // If interrupt priority specified before, it CANNOT BE CHANGED until `rmt_release_group_handle()` called
+        // So we have to check if the new priority specified conflicts with the old one
+        if (intr_priority) {
+            // User specified intr_priority, check if conflict or not
+            // Even though the `group->intr_priority` is 0, an intr_priority must have been specified automatically too,
+            // although we do not know it exactly now, so specifying the intr_priority again might also cause conflict.
+            // So no matter if `group->intr_priority` is 0 or not, we have to check.
+            // Value `0` of `group->intr_priority` means "unknown", NOT "unspecified"!
+            if (intr_priority != (group->intr_priority)) {
+                // intr_priority conflicts!
+                priority_conflict = true;
+            }
+        }
+        // else do nothing
+        // user did not specify intr_priority, then keep the old priority
+        // We'll use the `RMT_INTR_ALLOC_FLAG | RMT_ALLOW_INTR_PRIORITY_MASK`, which should always success
+    }
+    // The `group->intr_priority` will not change any longer, even though another task tries to modify it.
+    // So we could exit critical here safely.
+    esp_os_exit_critical(&group->spinlock);
+    return priority_conflict;
+}
+
+int rmt_isr_priority_to_flags(rmt_group_t *group)
+{
+    int isr_flags = 0;
+    if (group->intr_priority) {
+        // Use user-specified priority bit
+        isr_flags |= (1 << (group->intr_priority));
+    } else {
+        // Allow all LOWMED priority bits
+        isr_flags |= RMT_ALLOW_INTR_PRIORITY_MASK;
+    }
+    return isr_flags;
 }
 
 #if RMT_USE_RETENTION_LINK
