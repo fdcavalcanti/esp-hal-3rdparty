@@ -10,6 +10,7 @@
 #include "platform/os.h"
 #include "hal/regi2c_ctrl.h"
 #include "esp_private/critical_section.h"
+#include "esp_hw_log.h"
 
 // This lock is used to protect the analog i2c bus from being used concurrently
 DEFINE_CRIT_SECTION_LOCK_STATIC(mux, __attribute__((unused)));
