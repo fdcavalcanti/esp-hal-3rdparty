@@ -9,6 +9,10 @@
 #include "mbedtls/esp_mbedtls_random.h"
 #include "soc/soc_caps.h"
 
+#ifdef __NuttX__
+#include "esp_mbedtls.h"
+#endif
+
 #include "utils/includes.h"
 #include "utils/common.h"
 #include "crypto.h"
@@ -16,6 +20,7 @@
 #include "sha256.h"
 #include "mbedtls/pk.h"
 #include "mbedtls/psa_util.h"
+
 #include "p256_common.h"
 
 static int mpi_is_secp256r1_prime(const mbedtls_mpi *p)

@@ -27,14 +27,15 @@
 #include "mbedtls/oid.h"
 #include "mbedtls/platform_util.h"
 #include <mbedtls/psa_util.h>
-#include "p256_common.h"
-#include "psa/crypto.h"
-#include "psa/crypto_sizes.h"
-#include "esp_heap_caps.h"
 
 #ifdef __NuttX__
 #include "esp_mbedtls.h"
 #endif
+
+#include "p256_common.h"
+#include "psa/crypto.h"
+#include "psa/crypto_sizes.h"
+#include "esp_heap_caps.h"
 
 #define ECP_PRV_DER_MAX_BYTES   ( 29 + 3 * MBEDTLS_ECP_MAX_BYTES )
 #define ECP_PUB_DER_MAX_BYTES   ( 30 + 2 * MBEDTLS_ECP_MAX_BYTES )

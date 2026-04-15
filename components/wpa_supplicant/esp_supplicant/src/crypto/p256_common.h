@@ -101,7 +101,7 @@ static inline int p256_words_from_mpi(const mbedtls_mpi *in, u32 *out)
     u8 in_be[P256_LEN_BYTES];
     size_t i;
 
-    if (!in || in->MBEDTLS_PRIVATE(s) < 0 ||
+    if (!in || mbedtls_mpi_cmp_int(in, 0) < 0 ||
             mbedtls_mpi_size(in) > P256_LEN_BYTES ||
             mbedtls_mpi_write_binary(in, in_be, sizeof(in_be)) != 0) {
         return -1;
@@ -125,7 +125,7 @@ static inline int p256_words_from_mpi_reduced(const mbedtls_mpi *in, u32 *out)
     size_t i;
     size_t in_size;
 
-    if (!in || in->MBEDTLS_PRIVATE(s) < 0) {
+    if (!in || mbedtls_mpi_cmp_int(in, 0) < 0) {
         return -1;
     }
 
