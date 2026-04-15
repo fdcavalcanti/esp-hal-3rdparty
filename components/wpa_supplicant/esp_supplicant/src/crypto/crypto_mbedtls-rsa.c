@@ -27,6 +27,10 @@
 #include "psa/crypto.h"
 #include <mbedtls/psa_util.h>
 
+#ifdef __NuttX__
+#include "esp_mbedtls.h"
+#endif
+
 #define WPA_HEX_ERR(err) ((err) < 0 ? "-" : ""), (unsigned int) ((err) < 0 ? -(err) : (err))
 
 /* Dummy structures; these are just typecast to struct crypto_rsa_key */

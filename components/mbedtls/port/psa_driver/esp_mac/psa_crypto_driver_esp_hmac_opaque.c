@@ -12,6 +12,7 @@
 #include "esp_efuse_chip.h"
 #include "hal/hmac_types.h"
 #include "esp_hmac.h"
+#include "esp_mbedtls.h"
 
 #if SOC_KEY_MANAGER_SUPPORTED
 #include "esp_key_mgr.h"

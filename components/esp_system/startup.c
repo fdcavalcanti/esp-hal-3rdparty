@@ -70,6 +70,8 @@ __attribute__((weak, noreturn)) void esp_startup_start_app_other_cores(void)
 void esp_startup_start_app_other_cores(void) __attribute__((weak, alias("esp_startup_start_app_other_cores_default"))) __attribute__((noreturn));
 #endif
 
+void esp_os_startup_start_app_other_cores(void);
+
 static volatile bool s_system_inited[SOC_CPU_CORES_NUM] = { false };
 
 const sys_startup_fn_t g_startup_fn[SOC_CPU_CORES_NUM] = { [0] = start_cpu0,
@@ -161,7 +163,7 @@ static void ESP_SYSTEM_IRAM_ATTR start_cpu_other_cores_default(void)
         esp_rom_delay_us(100);
     }
 
-    esp_startup_start_app_other_cores();
+    esp_os_startup_start_app_other_cores();
 }
 #endif
 
@@ -172,17 +174,21 @@ static void do_core_init(void)
 
 static void do_secondary_init(void)
 {
+#ifndef __NuttX__
 #if !CONFIG_ESP_SYSTEM_SINGLE_CORE_MODE
     // The port layer transferred control to this function with other cores 'paused',
     // resume execution so that cores might execute component initialization functions.
     startup_resume_other_cores();
 #endif
-
+#endif
     // Execute initialization functions esp_system_init_fn_t assigned to the main core. While
     // this is happening, all other cores are executing the initialization functions
     // assigned to them since they have been resumed already.
     do_system_init_fn(ESP_SYSTEM_INIT_STAGE_SECONDARY);
 
+#ifndef __NuttX__
+    // NuttX can't support this loop, since CPU1 is only started later on the start up sequence.
+    // nx_smp_start() is called later, on nx_start() which is called after SYS_STARTUP_FN().
 #if !CONFIG_ESP_SYSTEM_SINGLE_CORE_MODE
     // Wait for all cores to finish secondary init.
     volatile bool system_inited = false;
@@ -195,6 +201,7 @@ static void do_secondary_init(void)
         esp_rom_delay_us(100);
     }
 #endif
+#endif  // __NuttX__
 }
 
 static void start_cpu0_default(void)
@@ -225,9 +232,11 @@ static void start_cpu0_default(void)
     s_system_full_inited = true;
 #endif
 
+#ifndef __NuttX__
     esp_startup_start_app();
 
     ESP_INFINITE_LOOP();
+#endif
 }
 
 #if CONFIG_IDF_TARGET_LINUX && !defined(ESP_SYSTEM_LINUX_NO_MAIN)

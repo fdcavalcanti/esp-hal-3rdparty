@@ -16,9 +16,13 @@
 #include "esp_sleep.h"
 #include "esp_log.h"
 #include "esp_rom_crc.h"
+#ifdef __NuttX__
+#include "platform/os.h"
+#else
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/portmacro.h"
+#endif
 #include "riscv/csr.h"
 #include "soc/clic_reg.h"
 #include "soc/rtc_periph.h"
