@@ -13,6 +13,7 @@
 
 #include <stddef.h>
 #include "esp_rom_caps.h"
+#include "soc/soc_caps.h"
 #include "hal/systimer_hal.h"
 #include "hal/systimer_ll.h"
 
@@ -27,12 +28,16 @@ void systimer_hal_init(systimer_hal_context_t *hal)
     // exposed with "rom_" prefix in rom.systimer.ld. We wrap them here to add
     // the missing systimer_ll_enable_etm() call.
     rom_systimer_hal_init(hal);
+#if SOC_SYSTIMER_SUPPORT_ETM
     systimer_ll_enable_etm(&SYSTIMER, true);
+#endif
 }
 
 void systimer_hal_deinit(systimer_hal_context_t *hal)
 {
+#if SOC_SYSTIMER_SUPPORT_ETM
     systimer_ll_enable_etm(&SYSTIMER, false);
+#endif
     rom_systimer_hal_deinit(hal);
 }
 #endif // !CONFIG_IDF_TARGET_ESP32C2
